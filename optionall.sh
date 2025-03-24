@@ -1,13 +1,10 @@
 #!/bin/sh
 
-dbg() { printf '{%s} ' "$@" >&2; printf '\n'; }
-
 printf 'ARGS:'
 printf ' [%s]' "$@"
 printf '\n'
 
 # TODO tests
-# TODO don't parse "-N123" as "-123" if "-N" is unknown?
 # TODO dynamic code gen to be eval'd?
 # TODO static code gen?
 # TODO let users handle end of options via callback?
@@ -22,16 +19,20 @@ is_function() {
 if ! is_function argument; then
 argument() {
 	arg=$1 value=$2 orig=$3
-	dbg argument "arg=$arg" "val=$value" "orig=$orig"
 	case "$arg" in
 		--name) name=$value; return 1 ;;
 		--age) age=$value; return 1 ;;
 		--help|-h) help=1; return 0 ;;
 		-v) verbosity=$((verbosity+1)); return 0 ;;
-		-d) delim=$value; return 1 ;;
+		-d)
+			case "$value" in
+				?) delim=$value ;;
+				*) echo 'delimiter must be a single char' ; exit 1 ;;
+			esac
+			return 1 ;;
 		-f) field=$value; return 1 ;;
 		-n) number=$value; return 1 ;;
-		-[0-9]*) number=${orig#-}; return 0 ;;
+		-[0-9]*) number=$value; return 0 ;;
 		-?) echo "Invalid option $arg"; exit 1 ;;
 		--*) echo "Invalid option $arg"; exit 1 ;;
 		# *) return 1 ;;
@@ -40,7 +41,6 @@ argument() {
 fi
 
 parselong() {
-	dbg parselong
 	value=${arg#*=}
 	if [ "$value" = "$arg" ]; then
 		value=$next opt_state=skip
@@ -52,19 +52,39 @@ parselong() {
 	esac
 }
 
+parse_num() {
+	# TODO support negative numbers?
+	num=
+	while [ "$1" ]; do
+		tail=${1#?}
+		head=${1%"$tail"}
+		case "$head" in
+			[0-9]) num=$num$head ;;
+			*) break ;;
+		esac
+		set -- "$tail"
+	done
+}
+
 parseshort() {
-	dbg parseshort
 	fullarg=$arg
 	arg=${arg#-}
 	while [ "$arg" ]; do
-		value=${arg#?}
-		set -- "$value"
-		a=-${arg%"$value"}
-		if ! [ "$value" ]; then
-			dbg emptyvalue
-			value=$next opt_state=skip
-		fi
-		argument "$a" "$value" "$fullarg"
+		case "$arg" in
+			[0-9]*)
+				parse_num "$arg"
+				value=$num a=$num;
+				set -- "${arg#"$value"}"
+				;;
+			*)
+				value=${arg#?} a=${arg%"$value"}
+				set -- "$value"
+				if ! [ "$value" ]; then
+					value=$next opt_state=skip
+				fi
+				;;
+		esac
+		argument "-$a" "$value" "$fullarg"
 		case "$?" in
 			0) opt_state= ;;
 			*) break ;;
@@ -76,7 +96,6 @@ parseshort() {
 opt_state=
 for arg; do
 	shift
-	dbg "handling" "$arg"
 
 	case "$opt_state" in
 		end) set -- "$@" "$arg"; continue ;;
@@ -111,7 +130,6 @@ optionall_parse() {
 			continue;
 		fi
 		if [ "$opt_state" = skip ]; then
-			dbg "skipping $arg"
 			opt_state=
 			continue
 		fi

@@ -120,28 +120,23 @@ optionall_parse() {
 	unparsed=${2:-set}
 	shift 2
 
-	optionall_init
+	opt_state=
 	for arg; do
 		shift
-		# [ "$opt_state" = end ] && { set -- "$@" "$arg"; continue; }
-		if [ "$opt_state" = end ]; then
-			set -- "$@" "$arg";
-			"$unparsed" "$arg";
-			continue;
-		fi
-		if [ "$opt_state" = skip ]; then
-			opt_state=
-			continue
-		fi
 
-		value=${arg#*=} next=$1
+		case "$opt_state" in
+			end) set -- "$@" "$arg"; continue ;;
+			skip) opt_state=; continue ;;
+		esac
+
+		next=$1
 		case "$arg" in
 			# end of options
 			--) opt_state=end ;;
 			# long args (with values)
-			--?*) parselong "$@" ;;
+			--?*) parselong ;;
 			# short args
-			-?*) parseshort "$@" ;;
+			-?*) parseshort ;;
 			# non-args
 			# *) set -- "$@" "$arg"; opt_state= ;;
 			# TODO which parameters to pass to unparsed? allow to pass "set"?

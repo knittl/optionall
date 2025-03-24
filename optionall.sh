@@ -67,6 +67,7 @@ parse_num() {
 }
 
 parseshort() {
+	argument_handler=$1
 	fullarg=$arg
 	arg=${arg#-}
 	while [ "$arg" ]; do
@@ -84,7 +85,7 @@ parseshort() {
 				fi
 				;;
 		esac
-		argument "-$a" "$value" "$fullarg"
+		"$argument_handler" "-$a" "$value" "$fullarg"
 		case "$?" in
 			0) opt_state= ;;
 			*) break ;;
@@ -107,9 +108,9 @@ for arg; do
 		# end of options
 		--) opt_state=end ;;
 		# long args (with values)
-		--?*) parselong ;;
+		--?*) parselong argument ;;
 		# short args
-		-?*) parseshort ;;
+		-?*) parseshort argument ;;
 		# non-args
 		*) set -- "$@" "$arg" ;;
 	esac

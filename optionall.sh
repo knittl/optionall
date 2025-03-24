@@ -150,6 +150,30 @@ optionall_parse() {
 	done
 }
 
+alias optionall="eval '"'
+opt_state=
+for arg; do
+	shift
+
+	case "$opt_state" in
+		end) set -- "$@" "$arg"; continue ;;
+		skip) opt_state=; continue ;;
+	esac
+
+	next=$1
+	case "$arg" in
+		# end of options
+		--) opt_state=end ;;
+		# long args (with values)
+		--?*) parselong ;;
+		# short args
+		-?*) parseshort ;;
+		# non-args
+		*) set -- "$@" "$arg" ;;
+	esac
+done
+'"'"
+
 printf 'PARSED:'
 printf ' [%s]' "$@"
 printf '\n'

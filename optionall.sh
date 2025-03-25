@@ -24,6 +24,10 @@ is_function argument || argument() {
 		--name) name=$value; return 1 ;;
 		--age) age=$value; return 1 ;;
 		--help|-h) help=1; return 0 ;;
+		--find-renames)
+			find_renames=${opt:-default}
+			test -z "$opt"
+			;;
 		-v) verbosity=$((verbosity+1)); return 0 ;;
 		-d)
 			case "$value" in
@@ -33,6 +37,12 @@ is_function argument || argument() {
 			;;
 		-f) field=$value; return 1 ;;
 		-n) number=$value; return 1 ;;
+		-C) return 0 ;;
+		-D) return 0 ;;
+		-M)
+			M=${opt:-default}
+			test -z "$opt"
+			;;
 		-[0-9]*) number=$value; return 0 ;;
 		-?) echo "Invalid option $arg"; exit 1 ;;
 		--*) echo "Invalid option $arg"; exit 1 ;;
@@ -187,3 +197,6 @@ echo "number=$number"
 echo "delimiter=$delim"
 echo "delimiter='$delim'"
 echo "field=$field"
+echo "M%=$M"
+echo "C=$C"
+echo "rename%=$find_renames"

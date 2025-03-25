@@ -43,10 +43,12 @@ is_function argument || argument() {
 parselong() {
 	argument_handler=$1
 	value=${arg#*=}
-	if [ "$value" = "$arg" ]; then
-		value=$next opt_state=skip
-	fi
-	"$argument_handler" "${arg%%=*}" "$value" "$arg"
+	case "$value" in
+		"$arg") value=$next opt_state=skip ;;
+	esac
+	argname=${arg%%=*}
+	opt=${arg#"$argname"}
+	"$argument_handler" "$argname" "$value" "$arg" "${opt#=}" "$arg"
 	case "$?" in
 		0) opt_state= ;;
 		*) ;;
@@ -57,8 +59,7 @@ parse_num() {
 	# TODO support negative numbers?
 	num=
 	while [ "$1" ]; do
-		tail=${1#?}
-		head=${1%"$tail"}
+		tail=${1#?} head=${1%"$tail"}
 		case "$head" in
 			[0-9]) num=$num$head ;;
 			*) break ;;
@@ -69,24 +70,22 @@ parse_num() {
 
 parseshort() {
 	argument_handler=$1
-	fullarg=$arg
+	orig=$arg
 	arg=${arg#-}
 	while [ "$arg" ]; do
 		case "$arg" in
 			[0-9]*)
 				parse_num "$arg"
-				value=$num a=$num;
+				value=$num a=$num opt=
 				set -- "${arg#"$value"}"
 				;;
 			*)
-				value=${arg#?} a=${arg%"$value"}
+				value=${arg#?} a=${arg%"$value"} opt=$value
 				set -- "$value"
-				if ! [ "$value" ]; then
-					value=$next opt_state=skip
-				fi
+				test "$value" || value=$next opt_state=skip
 				;;
 		esac
-		"$argument_handler" "-$a" "$value" "$fullarg"
+		"$argument_handler" "-$a" "$value" "$opt" "$orig"
 		case "$?" in
 			0) opt_state= ;;
 			*) break ;;

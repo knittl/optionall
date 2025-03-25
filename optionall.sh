@@ -41,11 +41,12 @@ is_function argument || argument() {
 }
 
 parselong() {
+	argument_handler=$1
 	value=${arg#*=}
 	if [ "$value" = "$arg" ]; then
 		value=$next opt_state=skip
 	fi
-	argument "${arg%%=*}" "$value" "$arg"
+	"$argument_handler" "${arg%%=*}" "$value" "$arg"
 	case "$?" in
 		0) opt_state= ;;
 		*) ;;

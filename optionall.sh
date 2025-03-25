@@ -27,10 +27,10 @@ is_function argument || argument() {
 		-v) verbosity=$((verbosity+1)); return 0 ;;
 		-d)
 			case "$value" in
-				?) delim=$value ;;
+				?) delim=$value; return 1 ;;
 				*) echo 'delimiter must be a single char' ; exit 1 ;;
 			esac
-			return 1 ;;
+			;;
 		-f) field=$value; return 1 ;;
 		-n) number=$value; return 1 ;;
 		-[0-9]*) number=$value; return 0 ;;

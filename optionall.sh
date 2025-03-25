@@ -16,9 +16,10 @@ is_function() {
 	esac
 }
 
-if ! is_function argument; then
-argument() {
-	arg=$1 value=$2 orig=$3
+is_function argument || argument() {
+	arg=$1 value=$2 opt=$3 orig=$4
+	printf '[%s] ' "a=$arg" "v=$value" "opt=$opt" "orig=$orig"
+	printf '\n'
 	case "$arg" in
 		--name) name=$value; return 1 ;;
 		--age) age=$value; return 1 ;;
@@ -38,7 +39,6 @@ argument() {
 		# *) return 1 ;;
 	esac
 }
-fi
 
 parselong() {
 	value=${arg#*=}

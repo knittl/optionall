@@ -53,9 +53,7 @@ is_function argument || argument() {
 parselong() {
 	argument_handler=$1
 	value=${arg#*=}
-	case "$value" in
-		"$arg") value=$next opt_state=skip ;;
-	esac
+	[ "$value" = "$arg" ] && value=$next opt_state=skip
 	argname=${arg%%=*}
 	opt=${arg#"$argname"}
 	"$argument_handler" "$argname" "$value" "$arg" "${opt#=}" "$arg"
